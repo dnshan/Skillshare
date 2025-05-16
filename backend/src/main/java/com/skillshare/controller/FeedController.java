@@ -1,129 +1,135 @@
 package com.skillshare.controller;
 
-import com.skillshare.model.Feed;
-import com.skillshare.model.Post;
-import com.skillshare.model.User;
-import com.skillshare.repository.mongo.FeedRepository;
-import com.skillshare.repository.mongo.PostRepository;
-import com.skillshare.repository.mongo.UserRepository;
-import com.skillshare.security.JwtTokenProvider;
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import com.skillshare.model.FeedPost;
+import com.skillshare.model.FeedComment;
+import com.skillshare.repository.mongo.FeedPostRepository;
+import com.skillshare.repository.mongo.FeedCommentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/feeds")
-@RequiredArgsConstructor
+@RequestMapping("/api/feed")
+@CrossOrigin(origins = "http://localhost:5173")
 public class FeedController {
 
-    private final FeedRepository feedRepository;
-    private final UserRepository userRepository;
-    private final PostRepository postRepository;
-    private final JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    private FeedPostRepository feedPostRepository;
 
-    @PostMapping
-    public ResponseEntity<?> createFeed(@RequestBody Feed feed, @AuthenticationPrincipal User user) {
-        if (feedRepository.existsByNameAndUser(feed.getName(), user)) {
-            return ResponseEntity.badRequest().body("Feed with this name already exists");
-        }
-        feed.setName(feed.getName());
-        feed.setDescription(feed.getDescription());
-        feed.setUser(user);
-        feed.onCreate();
-        return ResponseEntity.ok(feedRepository.save(feed));
-    }
+    @Autowired
+    private FeedCommentRepository feedCommentRepository;
 
+    // Get all posts
     @GetMapping
-    public ResponseEntity<?> getFeeds(@AuthenticationPrincipal User user, Pageable pageable) {
-        Page<Feed> feeds = feedRepository.findByUser(user, pageable);
-        return ResponseEntity.ok(feeds);
+    public ResponseEntity<List<FeedPost>> getAllPosts() {
+        return ResponseEntity.ok(feedPostRepository.findAll());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getFeedById(@PathVariable String id, @AuthenticationPrincipal User user) {
-        return feedRepository.findById(id)
-                .map(feed -> {
-                    if (!feed.getUser().getId().equals(user.getId())) {
-                        return ResponseEntity.badRequest().body("Not authorized to view this feed");
-                    }
-                    return ResponseEntity.ok(feed);
-                })
-                .orElse(ResponseEntity.notFound().build());
+    // Get posts by category
+    @GetMapping("/category/{category}")
+    public ResponseEntity<List<FeedPost>> getPostsByCategory(@PathVariable String category) {
+        return ResponseEntity.ok(feedPostRepository.findByCategory(category));
     }
 
+    // Get posts by source type
+    @GetMapping("/source/{sourceType}")
+    public ResponseEntity<List<FeedPost>> getPostsBySourceType(@PathVariable String sourceType) {
+        return ResponseEntity.ok(feedPostRepository.findBySourceType(sourceType));
+    }
+
+    // Get posts by category and source type
+    @GetMapping("/category/{category}/source/{sourceType}")
+    public ResponseEntity<List<FeedPost>> getPostsByCategoryAndSourceType(
+            @PathVariable String category,
+            @PathVariable String sourceType) {
+        return ResponseEntity.ok(feedPostRepository.findByCategoryAndSourceType(category, sourceType));
+    }
+
+    // Create a new post
+    @PostMapping
+    public ResponseEntity<FeedPost> createPost(@RequestBody FeedPost post) {
+        return ResponseEntity.ok(feedPostRepository.save(post));
+    }
+
+    // Update a post
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateFeed(@PathVariable String id, @RequestBody Feed updatedFeed, @AuthenticationPrincipal User user) {
-        return feedRepository.findById(id)
-                .map(feed -> {
-                    if (!feed.getUser().getId().equals(user.getId())) {
-                        return ResponseEntity.badRequest().body("Not authorized to update this feed");
-                    }
-                    if (!feed.getName().equals(updatedFeed.getName()) && 
-                        feedRepository.existsByNameAndUser(updatedFeed.getName(), user)) {
-                        return ResponseEntity.badRequest().body("Feed with this name already exists");
-                    }
-                    feed.setName(updatedFeed.getName());
-                    feed.setDescription(updatedFeed.getDescription());
-                    feed.onUpdate();
-                    return ResponseEntity.ok(feedRepository.save(feed));
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<FeedPost> updatePost(@PathVariable String id, @RequestBody FeedPost post) {
+        Optional<FeedPost> existingPost = feedPostRepository.findById(id);
+        if (existingPost.isPresent()) {
+            post.setId(id);
+            return ResponseEntity.ok(feedPostRepository.save(post));
+        }
+        return ResponseEntity.notFound().build();
     }
 
+    // Delete a post
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteFeed(@PathVariable String id, @AuthenticationPrincipal User user) {
-        return feedRepository.findById(id)
-                .map(feed -> {
-                    if (!feed.getUser().getId().equals(user.getId())) {
-                        return ResponseEntity.badRequest().body("Not authorized to delete this feed");
-                    }
-                    feedRepository.delete(feed);
-                    return ResponseEntity.ok().build();
-                })
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Void> deletePost(@PathVariable String id) {
+        Optional<FeedPost> post = feedPostRepository.findById(id);
+        if (post.isPresent()) {
+            // Delete all comments for this post
+            feedCommentRepository.deleteAll(feedCommentRepository.findByPostId(id));
+            // Delete the post
+            feedPostRepository.deleteById(id);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 
-    @PostMapping("/{id}/posts/{postId}")
-    public ResponseEntity<?> addPostToFeed(@PathVariable String id, @PathVariable String postId, @AuthenticationPrincipal User user) {
-        return feedRepository.findById(id)
-                .map(feed -> {
-                    if (!feed.getUser().getId().equals(user.getId())) {
-                        return ResponseEntity.badRequest().body("Not authorized to modify this feed");
-                    }
-                    return postRepository.findById(postId)
-                            .map(post -> {
-                                feed.getPosts().add(post);
-                                feed.onUpdate();
-                                return ResponseEntity.ok(feedRepository.save(feed));
-                            })
-                            .orElse(ResponseEntity.notFound().build());
-                })
-                .orElse(ResponseEntity.notFound().build());
+    // Like a post
+    @PostMapping("/{id}/like")
+    public ResponseEntity<FeedPost> likePost(@PathVariable String id) {
+        Optional<FeedPost> post = feedPostRepository.findById(id);
+        if (post.isPresent()) {
+            FeedPost updatedPost = post.get();
+            updatedPost.setLikes(updatedPost.getLikes() + 1);
+            return ResponseEntity.ok(feedPostRepository.save(updatedPost));
+        }
+        return ResponseEntity.notFound().build();
     }
 
-    @DeleteMapping("/{id}/posts/{postId}")
-    public ResponseEntity<?> removePostFromFeed(@PathVariable String id, @PathVariable String postId, @AuthenticationPrincipal User user) {
-        return feedRepository.findById(id)
-                .map(feed -> {
-                    if (!feed.getUser().getId().equals(user.getId())) {
-                        return ResponseEntity.badRequest().body("Not authorized to modify this feed");
-                    }
-                    return postRepository.findById(postId)
-                            .map(post -> {
-                                feed.getPosts().remove(post);
-                                feed.onUpdate();
-                                return ResponseEntity.ok(feedRepository.save(feed));
-                            })
-                            .orElse(ResponseEntity.notFound().build());
-                })
-                .orElse(ResponseEntity.notFound().build());
+    // Get comments for a post
+    @GetMapping("/{postId}/comments")
+    public ResponseEntity<List<FeedComment>> getComments(@PathVariable String postId) {
+        return ResponseEntity.ok(feedCommentRepository.findByPostId(postId));
+    }
+
+    // Add a comment
+    @PostMapping("/{postId}/comments")
+    public ResponseEntity<FeedComment> addComment(
+            @PathVariable String postId,
+            @RequestBody FeedComment comment) {
+        comment.setPostId(postId);
+        return ResponseEntity.ok(feedCommentRepository.save(comment));
+    }
+
+    // Update a comment
+    @PutMapping("/{postId}/comments/{commentId}")
+    public ResponseEntity<FeedComment> updateComment(
+            @PathVariable String postId,
+            @PathVariable String commentId,
+            @RequestBody FeedComment comment) {
+        Optional<FeedComment> existingComment = feedCommentRepository.findById(commentId);
+        if (existingComment.isPresent() && existingComment.get().getPostId().equals(postId)) {
+            comment.setId(commentId);
+            comment.setPostId(postId);
+            return ResponseEntity.ok(feedCommentRepository.save(comment));
+        }
+        return ResponseEntity.notFound().build();
+    }
+
+    // Delete a comment
+    @DeleteMapping("/{postId}/comments/{commentId}")
+    public ResponseEntity<Void> deleteComment(
+            @PathVariable String postId,
+            @PathVariable String commentId) {
+        Optional<FeedComment> comment = feedCommentRepository.findById(commentId);
+        if (comment.isPresent() && comment.get().getPostId().equals(postId)) {
+            feedCommentRepository.deleteById(commentId);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
     }
 } 

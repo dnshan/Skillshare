@@ -90,7 +90,28 @@ export const notificationAPI = {
 
 export const learningProgressAPI = {
   getProgress: () => api.get('/learning-progress'),
-  updateProgress: (data) => api.put('/learning-progress', data),
+  getProgressById: (id) => api.get(`/learning-progress/${id}`),
+  createProgress: (data) => api.post('/learning-progress', data),
+  updateProgress: (id, data) => api.put(`/learning-progress/${id}`, data),
+  deleteProgress: (id) => api.delete(`/learning-progress/${id}`)
+};
+
+export const feedAPI = {
+  getAllPosts: () => axios.get(`${API_URL}/api/feed`),
+  getPostsByCategory: (category) => axios.get(`${API_URL}/api/feed/category/${category}`),
+  getPostsBySourceType: (sourceType) => axios.get(`${API_URL}/api/feed/source/${sourceType}`),
+  getPostsByCategoryAndSourceType: (category, sourceType) => 
+    axios.get(`${API_URL}/api/feed/category/${category}/source/${sourceType}`),
+  createPost: (post) => axios.post(`${API_URL}/api/feed`, post),
+  updatePost: (id, post) => axios.put(`${API_URL}/api/feed/${id}`, post),
+  deletePost: (id) => axios.delete(`${API_URL}/api/feed/${id}`),
+  likePost: (id) => axios.post(`${API_URL}/api/feed/${id}/like`),
+  getComments: (postId) => axios.get(`${API_URL}/api/feed/${postId}/comments`),
+  addComment: (postId, comment) => axios.post(`${API_URL}/api/feed/${postId}/comments`, comment),
+  updateComment: (postId, commentId, comment) => 
+    axios.put(`${API_URL}/api/feed/${postId}/comments/${commentId}`, comment),
+  deleteComment: (postId, commentId) => 
+    axios.delete(`${API_URL}/api/feed/${postId}/comments/${commentId}`),
 };
 
 // Utility error handler
