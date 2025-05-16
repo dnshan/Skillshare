@@ -206,6 +206,7 @@ const LearningProgress = () => {
     setFormErrors({});
   };
 
+  // progress filter method
   const filteredProgress = progress.filter(item => {
     if (activeFilter === 'all') return true;
     return item.status === activeFilter;
