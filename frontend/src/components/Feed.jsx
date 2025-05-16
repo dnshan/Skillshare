@@ -53,6 +53,8 @@ const Feed = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [openCommentDialog, setOpenCommentDialog] = useState(false);
   const [selectedPost, setSelectedPost] = useState(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [postToDelete, setPostToDelete] = useState(null);
 
   useEffect(() => {
     loadPosts();
@@ -148,6 +150,27 @@ const Feed = () => {
       loadComments(postId);
     } catch (error) {
       console.error('Error deleting comment:', error);
+    }
+  };
+
+  const handleEditClick = (post) => {
+    setEditPost(post);
+    setOpenDialog(true);
+  };
+
+  const handleDeleteClick = (postId) => {
+    setPostToDelete(postId);
+    setOpenDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await feedAPI.deletePost(postToDelete);
+      setOpenDeleteDialog(false);
+      setPostToDelete(null);
+      loadPosts();
+    } catch (error) {
+      console.error('Error deleting post:', error);
     }
   };
 
@@ -269,13 +292,13 @@ const Feed = () => {
                     </Button>
                     <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
                       <IconButton 
-                        onClick={() => setEditPost(post)}
+                        onClick={() => handleEditClick(post)}
                         color="primary"
                       >
                         <EditIcon />
                       </IconButton>
                       <IconButton 
-                        onClick={() => handleDeletePost(post.id)}
+                        onClick={() => handleDeleteClick(post.id)}
                         color="error"
                       >
                         <DeleteIcon />
@@ -491,6 +514,40 @@ const Feed = () => {
             variant="outlined"
           >
             Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={openDeleteDialog}
+        onClose={() => {
+          setOpenDeleteDialog(false);
+          setPostToDelete(null);
+        }}
+      >
+        <DialogTitle>Delete Post</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this post? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={() => {
+              setOpenDeleteDialog(false);
+              setPostToDelete(null);
+            }}
+            variant="outlined"
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm}
+            variant="contained" 
+            color="error"
+          >
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
