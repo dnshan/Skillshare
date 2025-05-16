@@ -94,6 +94,7 @@ const LearningProgress = () => {
     }
   };
 
+  // form validation
   const validateForm = () => {
     const errors = {};
     if (!formData.title.trim()) errors.title = 'Title is required';
