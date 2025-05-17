@@ -179,22 +179,52 @@ const Feed = () => {
       display: 'flex', 
       flexDirection: 'column', 
       minHeight: '100vh',
-      backgroundColor: '#f5f5f5',
+      background: `
+        linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%),
+        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+      `,
+      backgroundAttachment: 'fixed',
+      position: 'relative',
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'linear-gradient(45deg, rgba(33, 150, 243, 0.05) 0%, rgba(33, 203, 243, 0.05) 100%)',
+        pointerEvents: 'none',
+      }
     }}>
       <Container maxWidth="lg" sx={{ 
         flexGrow: 1, 
         py: 4,
         display: 'flex',
         flexDirection: 'column',
+        position: 'relative',
+        zIndex: 1,
       }}>
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
+        <Paper elevation={0} sx={{ 
+          p: 4, 
+          mb: 4,
+          borderRadius: 3,
+          background: 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+        }}>
           <Box sx={{ 
             display: 'flex', 
             justifyContent: 'space-between', 
             alignItems: 'center',
-            mb: 3,
+            mb: 4,
           }}>
-            <Typography variant="h4" component="h1">
+            <Typography variant="h4" component="h1" sx={{ 
+              fontWeight: 700,
+              background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}>
               Community Feed
             </Typography>
             <Button
@@ -202,7 +232,18 @@ const Feed = () => {
               color="primary"
               startIcon={<AddIcon />}
               onClick={() => setOpenDialog(true)}
-              sx={{ height: 'fit-content' }}
+              sx={{ 
+                height: 'fit-content',
+                borderRadius: 2,
+                textTransform: 'none',
+                px: 3,
+                py: 1,
+                background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)',
+                '&:hover': {
+                  background: 'linear-gradient(45deg, #1976D2 30%, #1CB5E0 90%)',
+                }
+              }}
             >
               Create Feed
             </Button>
@@ -210,7 +251,7 @@ const Feed = () => {
           
           <Box sx={{ 
             display: 'flex', 
-            gap: 1, 
+            gap: 1.5, 
             mb: 2,
             flexWrap: 'wrap',
           }}>
@@ -218,7 +259,15 @@ const Feed = () => {
               label="All"
               onClick={() => setSelectedCategory('all')}
               color={selectedCategory === 'all' ? 'primary' : 'default'}
-              sx={{ mb: 1 }}
+              sx={{ 
+                mb: 1,
+                borderRadius: 2,
+                fontWeight: 600,
+                transition: 'all 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-2px)',
+                }
+              }}
             />
             {categories.map((category) => (
               <Chip
@@ -227,7 +276,15 @@ const Feed = () => {
                 onClick={() => setSelectedCategory(category.name)}
                 color={selectedCategory === category.name ? 'primary' : 'default'}
                 avatar={<Avatar src={category.image} />}
-                sx={{ mb: 1 }}
+                sx={{ 
+                  mb: 1,
+                  borderRadius: 2,
+                  fontWeight: 600,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                  }
+                }}
               />
             ))}
           </Box>
@@ -240,30 +297,49 @@ const Feed = () => {
                 height: '100%',
                 display: 'flex',
                 flexDirection: 'column',
-                transition: 'transform 0.2s',
+                transition: 'all 0.3s ease',
+                borderRadius: 3,
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
                 '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: 6,
+                  transform: 'translateY(-4px)',
+                  boxShadow: '0 12px 20px rgba(0,0,0,0.1)',
                 }
               }}>
-                <CardContent sx={{ flexGrow: 1 }}>
+                <CardContent sx={{ 
+                  flexGrow: 1,
+                  p: 3,
+                }}>
                   <Box sx={{ 
                     display: 'flex', 
                     justifyContent: 'space-between', 
                     alignItems: 'center', 
                     mb: 2 
                   }}>
-                    <Typography variant="h6" component="h2" sx={{ fontWeight: 'bold' }}>
+                    <Typography variant="h6" component="h2" sx={{ 
+                      fontWeight: 700,
+                      color: '#1a237e',
+                    }}>
                       {post.title}
                     </Typography>
                     <Chip 
                       label={post.category} 
                       color="primary" 
                       size="small" 
-                      sx={{ fontWeight: 'bold' }}
+                      sx={{ 
+                        fontWeight: 600,
+                        borderRadius: 2,
+                        background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                      }}
                     />
                   </Box>
-                  <Typography variant="body1" paragraph sx={{ whiteSpace: 'pre-line' }}>
+                  <Typography variant="body1" paragraph sx={{ 
+                    whiteSpace: 'pre-line',
+                    color: '#37474f',
+                    lineHeight: 1.7,
+                  }}>
                     {post.content}
                   </Typography>
                   <Box sx={{ 
@@ -276,7 +352,15 @@ const Feed = () => {
                     <Button
                       startIcon={<ThumbUpIcon />}
                       onClick={() => handleLikePost(post.id)}
-                      sx={{ minWidth: '100px' }}
+                      sx={{ 
+                        minWidth: '100px',
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        color: '#2196F3',
+                        '&:hover': {
+                          backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                        }
+                      }}
                     >
                       {post.likes} Likes
                     </Button>
@@ -286,26 +370,48 @@ const Feed = () => {
                         setSelectedPost(post);
                         setOpenCommentDialog(true);
                       }}
-                      sx={{ minWidth: '120px' }}
+                      sx={{ 
+                        minWidth: '120px',
+                        borderRadius: 2,
+                        textTransform: 'none',
+                        color: '#2196F3',
+                        '&:hover': {
+                          backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                        }
+                      }}
                     >
                       {comments[post.id]?.length || 0} Comments
                     </Button>
                     <Box sx={{ ml: 'auto', display: 'flex', gap: 1 }}>
                       <IconButton 
                         onClick={() => handleEditClick(post)}
-                        color="primary"
+                        sx={{
+                          color: '#2196F3',
+                          '&:hover': {
+                            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                          }
+                        }}
                       >
                         <EditIcon />
                       </IconButton>
                       <IconButton 
                         onClick={() => handleDeleteClick(post.id)}
-                        color="error"
+                        sx={{
+                          color: '#f44336',
+                          '&:hover': {
+                            backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                          }
+                        }}
                       >
                         <DeleteIcon />
                       </IconButton>
                     </Box>
                   </Box>
-                  <Typography variant="caption" color="text.secondary">
+                  <Typography variant="caption" sx={{ 
+                    color: '#78909c',
+                    display: 'block',
+                    mt: 1,
+                  }}>
                     Posted on {new Date(post.createdAt).toLocaleDateString()} at {new Date(post.createdAt).toLocaleTimeString()}
                   </Typography>
                 </CardContent>
@@ -324,12 +430,23 @@ const Feed = () => {
         }}
         fullWidth
         maxWidth="md"
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+          }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle sx={{ 
+          borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+          pb: 2,
+          fontWeight: 600,
+        }}>
           {editPost ? 'Edit Post' : 'Create New Feed'}
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ mt: 2 }}>
+          <Box sx={{ mt: 3 }}>
             <TextField
               fullWidth
               label="Title"
@@ -337,6 +454,11 @@ const Feed = () => {
               onChange={(e) => editPost ? setEditPost({ ...editPost, title: e.target.value }) : setNewPost({ ...newPost, title: e.target.value })}
               margin="normal"
               variant="outlined"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                }
+              }}
             />
             <TextField
               fullWidth
@@ -347,6 +469,11 @@ const Feed = () => {
               onChange={(e) => editPost ? setEditPost({ ...editPost, content: e.target.value }) : setNewPost({ ...newPost, content: e.target.value })}
               margin="normal"
               variant="outlined"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                }
+              }}
             />
             <TextField
               fullWidth
@@ -358,6 +485,11 @@ const Feed = () => {
               variant="outlined"
               SelectProps={{
                 native: true,
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                }
               }}
             >
               <option value="">Select a category</option>
@@ -376,6 +508,11 @@ const Feed = () => {
               setEditPost(null);
             }}
             variant="outlined"
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              px: 3,
+            }}
           >
             Cancel
           </Button>
@@ -383,7 +520,17 @@ const Feed = () => {
             onClick={editPost ? handleUpdatePost : handleCreatePost}
             variant="contained"
             color="primary"
-            sx={{ ml: 2 }}
+            sx={{ 
+              ml: 2,
+              borderRadius: 2,
+              textTransform: 'none',
+              px: 3,
+              background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+              boxShadow: '0 3px 5px 2px rgba(33, 203, 243, .3)',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #1976D2 30%, #1CB5E0 90%)',
+              }
+            }}
           >
             {editPost ? 'Update Feed' : 'Create Feed'}
           </Button>
@@ -399,9 +546,20 @@ const Feed = () => {
         }}
         maxWidth="md"
         fullWidth
-        PaperProps={{ sx: { height: '80vh' } }}
+        PaperProps={{ 
+          sx: { 
+            height: '80vh',
+            borderRadius: 3,
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+          } 
+        }}
       >
-        <DialogTitle sx={{ borderBottom: '1px solid #eee' }}>
+        <DialogTitle sx={{ 
+          borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+          pb: 2,
+          fontWeight: 600,
+        }}>
           Comments - {selectedPost?.title}
         </DialogTitle>
         <DialogContent dividers sx={{ 
@@ -418,15 +576,29 @@ const Feed = () => {
               <List>
                 {comments[selectedPost?.id]?.map((comment) => (
                   <React.Fragment key={comment.id}>
-                    <ListItem alignItems="flex-start">
+                    <ListItem alignItems="flex-start" sx={{
+                      backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                      borderRadius: 2,
+                      mb: 1,
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      }
+                    }}>
                       <ListItemText
                         primary={
-                          <Typography variant="body1" sx={{ wordBreak: 'break-word' }}>
+                          <Typography variant="body1" sx={{ 
+                            wordBreak: 'break-word',
+                            color: '#37474f',
+                          }}>
                             {comment.content}
                           </Typography>
                         }
                         secondary={
-                          <Typography variant="caption" color="text.secondary">
+                          <Typography variant="caption" sx={{ 
+                            color: '#78909c',
+                            mt: 0.5,
+                          }}>
                             {new Date(comment.createdAt).toLocaleString()}
                           </Typography>
                         }
@@ -438,11 +610,21 @@ const Feed = () => {
                               size="small"
                               value={editComment.content}
                               onChange={(e) => setEditComment({ ...editComment, content: e.target.value })}
-                              sx={{ width: '300px' }}
+                              sx={{ 
+                                width: '300px',
+                                '& .MuiOutlinedInput-root': {
+                                  borderRadius: 2,
+                                }
+                              }}
                             />
                             <IconButton 
                               onClick={() => handleUpdateComment(selectedPost.id, comment.id)}
-                              color="primary"
+                              sx={{
+                                color: '#2196F3',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                                }
+                              }}
                             >
                               <SendIcon />
                             </IconButton>
@@ -452,14 +634,25 @@ const Feed = () => {
                             <IconButton 
                               onClick={() => setEditComment(comment)}
                               size="small"
-                              sx={{ mr: 1 }}
+                              sx={{ 
+                                mr: 1,
+                                color: '#2196F3',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                                }
+                              }}
                             >
                               <EditIcon fontSize="small" />
                             </IconButton>
                             <IconButton 
                               onClick={() => handleDeleteComment(selectedPost.id, comment.id)}
                               size="small"
-                              color="error"
+                              sx={{
+                                color: '#f44336',
+                                '&:hover': {
+                                  backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                                }
+                              }}
                             >
                               <DeleteIcon fontSize="small" />
                             </IconButton>
@@ -467,7 +660,6 @@ const Feed = () => {
                         )}
                       </ListItemSecondaryAction>
                     </ListItem>
-                    <Divider component="li" />
                   </React.Fragment>
                 ))}
               </List>
@@ -477,8 +669,10 @@ const Feed = () => {
                 justifyContent: 'center', 
                 alignItems: 'center', 
                 height: '100px',
+                backgroundColor: 'rgba(0, 0, 0, 0.02)',
+                borderRadius: 2,
               }}>
-                <Typography variant="body1" color="text.secondary">
+                <Typography variant="body1" sx={{ color: '#78909c' }}>
                   No comments yet. Be the first to comment!
                 </Typography>
               </Box>
@@ -488,7 +682,7 @@ const Feed = () => {
             display: 'flex', 
             gap: 1, 
             pt: 2,
-            borderTop: '1px solid #eee',
+            borderTop: '1px solid rgba(0, 0, 0, 0.1)',
           }}>
             <TextField
               fullWidth
@@ -497,12 +691,23 @@ const Feed = () => {
               value={newComment[selectedPost?.id] || ''}
               onChange={(e) => setNewComment({ ...newComment, [selectedPost.id]: e.target.value })}
               variant="outlined"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                }
+              }}
             />
             <IconButton
               color="primary"
               onClick={() => handleAddComment(selectedPost.id)}
               size="large"
               disabled={!newComment[selectedPost?.id]?.trim()}
+              sx={{
+                color: '#2196F3',
+                '&:hover': {
+                  backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                }
+              }}
             >
               <SendIcon />
             </IconButton>
@@ -512,6 +717,11 @@ const Feed = () => {
           <Button 
             onClick={() => setOpenCommentDialog(false)}
             variant="outlined"
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              px: 3,
+            }}
           >
             Close
           </Button>
@@ -525,20 +735,38 @@ const Feed = () => {
           setOpenDeleteDialog(false);
           setPostToDelete(null);
         }}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+          }
+        }}
       >
-        <DialogTitle>Delete Post</DialogTitle>
-        <DialogContent>
-          <Typography>
+        <DialogTitle sx={{ 
+          borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
+          pb: 2,
+          fontWeight: 600,
+        }}>
+          Delete Post
+        </DialogTitle>
+        <DialogContent sx={{ pt: 3 }}>
+          <Typography sx={{ color: '#37474f' }}>
             Are you sure you want to delete this post? This action cannot be undone.
           </Typography>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ p: 3 }}>
           <Button 
             onClick={() => {
               setOpenDeleteDialog(false);
               setPostToDelete(null);
             }}
             variant="outlined"
+            sx={{
+              borderRadius: 2,
+              textTransform: 'none',
+              px: 3,
+            }}
           >
             Cancel
           </Button>
@@ -546,6 +774,16 @@ const Feed = () => {
             onClick={handleDeleteConfirm}
             variant="contained" 
             color="error"
+            sx={{ 
+              borderRadius: 2,
+              textTransform: 'none',
+              px: 3,
+              background: 'linear-gradient(45deg, #f44336 30%, #ff5252 90%)',
+              boxShadow: '0 3px 5px 2px rgba(244, 67, 54, .3)',
+              '&:hover': {
+                background: 'linear-gradient(45deg, #d32f2f 30%, #ff1744 90%)',
+              }
+            }}
           >
             Delete
           </Button>

@@ -1,5 +1,45 @@
 import { useEffect, useState } from 'react';
 import { userAPI } from '../services/api';
+import {
+  Box,
+  Container,
+  Grid,
+  Paper,
+  Typography,
+  Avatar,
+  Button,
+  TextField,
+  IconButton,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Chip,
+  Tab,
+  Tabs,
+  Card,
+  CardContent,
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Menu,
+  MenuItem,
+} from '@mui/material';
+import {
+  Edit as EditIcon,
+  LocationOn as LocationIcon,
+  Email as EmailIcon,
+  CalendarToday as CalendarIcon,
+  School as SchoolIcon,
+  Work as WorkIcon,
+  MoreVert as MoreVertIcon,
+  PhotoCamera as PhotoCameraIcon,
+  Save as SaveIcon,
+  Cancel as CancelIcon,
+} from '@mui/icons-material';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ErrorMessage from '../components/ErrorMessage';
 
@@ -8,34 +48,53 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editMode, setEditMode] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [openAvatarDialog, setOpenAvatarDialog] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     bio: '',
-    location: ''
+    location: '',
+    education: '',
+    occupation: '',
+    skills: [],
+    socialLinks: {
+      linkedin: '',
+      github: '',
+      twitter: '',
+    }
   });
 
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const res = await userAPI.getProfile();
-        setProfile(res.data);
-        setFormData({
-          name: res.data.name,
-          email: res.data.email,
-          bio: res.data.bio || '',
-          location: res.data.location || ''
-        });
-        setError(null);
-      } catch (err) {
-        setError('Failed to load profile. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProfile();
   }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const res = await userAPI.getProfile();
+      setProfile(res.data);
+      setFormData({
+        name: res.data.name || '',
+        email: res.data.email || '',
+        bio: res.data.bio || '',
+        location: res.data.location || '',
+        education: res.data.education || '',
+        occupation: res.data.occupation || '',
+        skills: res.data.skills || [],
+        socialLinks: res.data.socialLinks || {
+          linkedin: '',
+          github: '',
+          twitter: '',
+        }
+      });
+      setError(null);
+    } catch (err) {
+      setError('Failed to load profile. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -45,12 +104,23 @@ const Profile = () => {
     }));
   };
 
+  const handleSocialLinkChange = (platform, value) => {
+    setFormData(prev => ({
+      ...prev,
+      socialLinks: {
+        ...prev.socialLinks,
+        [platform]: value
+      }
+    }));
+  };
+
   const handleSave = async () => {
     try {
       setLoading(true);
       const res = await userAPI.updateProfile(formData);
       setProfile(res.data);
       setEditMode(false);
+      setError(null);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to update profile');
     } finally {
@@ -58,466 +128,466 @@ const Profile = () => {
     }
   };
 
-  if (loading && !profile) return <FullPageLoading />;
-  if (error && !profile) return <FullPageError message={error} />;
+  const handleAvatarUpload = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      try {
+        setLoading(true);
+        const formData = new FormData();
+        formData.append('avatar', file);
+        const res = await userAPI.uploadAvatar(formData);
+        setProfile(prev => ({ ...prev, profilePictureUrl: res.data.profilePictureUrl }));
+        setOpenAvatarDialog(false);
+      } catch (err) {
+        setError('Failed to upload avatar');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  if (loading && !profile) return <LoadingSpinner />;
+  if (error && !profile) return <ErrorMessage message={error} />;
 
   return (
-    <div className="profile-container">
-      <div className="profile-header">
-        <h1 className="profile-title">Your Profile</h1>
-        <button 
-          className={`edit-btn ${editMode ? 'cancel' : ''}`}
-          onClick={() => setEditMode(!editMode)}
-          disabled={loading}
-        >
-          {editMode ? 'Cancel' : 'Edit Profile'}
-        </button>
-      </div>
+    <Box sx={{ 
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%)',
+      py: 4
+    }}>
+      <Container maxWidth="lg">
+        <Grid container spacing={3}>
+          {/* Profile Header */}
+          <Grid item xs={12}>
+            <Paper sx={{ 
+              p: 3, 
+              borderRadius: 3,
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+                <Box sx={{ position: 'relative' }}>
+                  <Avatar
+                    src={profile?.profilePictureUrl}
+                    sx={{ 
+                      width: 120, 
+                      height: 120,
+                      border: '4px solid white',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    }}
+                  />
+                  <IconButton
+                    sx={{
+                      position: 'absolute',
+                      bottom: 0,
+                      right: 0,
+                      backgroundColor: 'primary.main',
+                      color: 'white',
+                      '&:hover': { backgroundColor: 'primary.dark' },
+                    }}
+                    onClick={() => setOpenAvatarDialog(true)}
+                  >
+                    <PhotoCameraIcon />
+                  </IconButton>
+                </Box>
+                <Box sx={{ flexGrow: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                      {profile?.name}
+                    </Typography>
+                    <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+                      <MoreVertIcon />
+                    </IconButton>
+                  </Box>
+                  <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
+                    {profile?.bio || 'No bio yet'}
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                    {profile?.location && (
+                      <Chip
+                        icon={<LocationIcon />}
+                        label={profile.location}
+                        variant="outlined"
+                      />
+                    )}
+                    {profile?.education && (
+                      <Chip
+                        icon={<SchoolIcon />}
+                        label={profile.education}
+                        variant="outlined"
+                      />
+                    )}
+                    {profile?.occupation && (
+                      <Chip
+                        icon={<WorkIcon />}
+                        label={profile.occupation}
+                        variant="outlined"
+                      />
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+            </Paper>
+          </Grid>
 
-      <div className="profile-card">
-        <div className="profile-avatar-section">
-          <div className="avatar-wrapper">
-            <img 
-              src={profile?.avatar || 'https://via.placeholder.com/150'} 
-              alt="Profile" 
-              className="profile-avatar"
+          {/* Main Content */}
+          <Grid item xs={12} md={8}>
+            <Paper sx={{ 
+              p: 3, 
+              borderRadius: 3,
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(10px)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            }}>
+              <Tabs
+                value={activeTab}
+                onChange={(e, newValue) => setActiveTab(newValue)}
+                sx={{ mb: 3 }}
+              >
+                <Tab label="About" />
+                <Tab label="Activity" />
+                <Tab label="Skills" />
+                <Tab label="Settings" />
+              </Tabs>
+
+              {activeTab === 0 && (
+                <Box>
+                  {editMode ? (
+                    <Box component="form" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <TextField
+                        fullWidth
+                        label="Name"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleInputChange}
+                      />
+                      <TextField
+                        fullWidth
+                        label="Bio"
+                        name="bio"
+                        multiline
+                        rows={4}
+                        value={formData.bio}
+                        onChange={handleInputChange}
+                      />
+                      <TextField
+                        fullWidth
+                        label="Location"
+                        name="location"
+                        value={formData.location}
+                        onChange={handleInputChange}
+                      />
+                      <TextField
+                        fullWidth
+                        label="Education"
+                        name="education"
+                        value={formData.education}
+                        onChange={handleInputChange}
+                      />
+                      <TextField
+                        fullWidth
+                        label="Occupation"
+                        name="occupation"
+                        value={formData.occupation}
+                        onChange={handleInputChange}
+                      />
+                      <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                        <Button
+                          variant="outlined"
+                          startIcon={<CancelIcon />}
+                          onClick={() => setEditMode(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="contained"
+                          startIcon={<SaveIcon />}
+                          onClick={handleSave}
+                        >
+                          Save Changes
+                        </Button>
+                      </Box>
+                    </Box>
+                  ) : (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <Box>
+                        <Typography variant="h6" sx={{ mb: 1 }}>About</Typography>
+                        <Typography variant="body1" color="text.secondary">
+                          {profile?.bio || 'No bio available'}
+                        </Typography>
+                      </Box>
+                      <Box>
+                        <Typography variant="h6" sx={{ mb: 1 }}>Contact Information</Typography>
+                        <List>
+                          <ListItem>
+                            <ListItemAvatar>
+                              <Avatar sx={{ bgcolor: 'primary.main' }}>
+                                <EmailIcon />
+                              </Avatar>
+                            </ListItemAvatar>
+                            <ListItemText
+                              primary="Email"
+                              secondary={profile?.email}
+                            />
+                          </ListItem>
+                          {profile?.location && (
+                            <ListItem>
+                              <ListItemAvatar>
+                                <Avatar sx={{ bgcolor: 'primary.main' }}>
+                                  <LocationIcon />
+                                </Avatar>
+                              </ListItemAvatar>
+                              <ListItemText
+                                primary="Location"
+                                secondary={profile.location}
+                              />
+                            </ListItem>
+                          )}
+                        </List>
+                      </Box>
+                      <Box>
+                        <Typography variant="h6" sx={{ mb: 1 }}>Education & Work</Typography>
+                        <List>
+                          {profile?.education && (
+                            <ListItem>
+                              <ListItemAvatar>
+                                <Avatar sx={{ bgcolor: 'primary.main' }}>
+                                  <SchoolIcon />
+                                </Avatar>
+                              </ListItemAvatar>
+                              <ListItemText
+                                primary="Education"
+                                secondary={profile.education}
+                              />
+                            </ListItem>
+                          )}
+                          {profile?.occupation && (
+                            <ListItem>
+                              <ListItemAvatar>
+                                <Avatar sx={{ bgcolor: 'primary.main' }}>
+                                  <WorkIcon />
+                                </Avatar>
+                              </ListItemAvatar>
+                              <ListItemText
+                                primary="Occupation"
+                                secondary={profile.occupation}
+                              />
+                            </ListItem>
+                          )}
+                        </List>
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+              )}
+
+              {activeTab === 1 && (
+                <Box>
+                  <Typography variant="h6" sx={{ mb: 2 }}>Recent Activity</Typography>
+                  <List>
+                    {/* Add activity items here */}
+                    <ListItem>
+                      <ListItemText
+                        primary="Completed Course: Web Development Basics"
+                        secondary="2 days ago"
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemText
+                        primary="Shared a post in the community"
+                        secondary="5 days ago"
+                      />
+                    </ListItem>
+                  </List>
+                </Box>
+              )}
+
+              {activeTab === 2 && (
+                <Box>
+                  <Typography variant="h6" sx={{ mb: 2 }}>Skills & Expertise</Typography>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {profile?.skills?.map((skill, index) => (
+                      <Chip
+                        key={index}
+                        label={skill}
+                        color="primary"
+                        variant="outlined"
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
+
+              {activeTab === 3 && (
+                <Box>
+                  <Typography variant="h6" sx={{ mb: 2 }}>Account Settings</Typography>
+                  <List>
+                    <ListItem>
+                      <ListItemText
+                        primary="Email Notifications"
+                        secondary="Manage your notification preferences"
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemText
+                        primary="Privacy Settings"
+                        secondary="Control who can see your profile"
+                      />
+                    </ListItem>
+                    <ListItem>
+                      <ListItemText
+                        primary="Change Password"
+                        secondary="Update your account password"
+                      />
+                    </ListItem>
+                  </List>
+                </Box>
+              )}
+            </Paper>
+          </Grid>
+
+          {/* Sidebar */}
+          <Grid item xs={12} md={4}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {/* Stats Card */}
+              <Paper sx={{ 
+                p: 3, 
+                borderRadius: 3,
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+              }}>
+                <Typography variant="h6" sx={{ mb: 2 }}>Statistics</Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={4}>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Typography variant="h4" color="primary">
+                        {profile?.coursesCompleted || 0}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Courses
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={4}>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Typography variant="h4" color="primary">
+                        {profile?.postsCount || 0}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Posts
+                      </Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={4}>
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Typography variant="h4" color="primary">
+                        {profile?.followersCount || 0}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Followers
+                      </Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </Paper>
+
+              {/* Social Links Card */}
+              <Paper sx={{ 
+                p: 3, 
+                borderRadius: 3,
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+              }}>
+                <Typography variant="h6" sx={{ mb: 2 }}>Social Links</Typography>
+                <List>
+                  {profile?.socialLinks?.linkedin && (
+                    <ListItem>
+                      <ListItemText
+                        primary="LinkedIn"
+                        secondary={profile.socialLinks.linkedin}
+                      />
+                    </ListItem>
+                  )}
+                  {profile?.socialLinks?.github && (
+                    <ListItem>
+                      <ListItemText
+                        primary="GitHub"
+                        secondary={profile.socialLinks.github}
+                      />
+                    </ListItem>
+                  )}
+                  {profile?.socialLinks?.twitter && (
+                    <ListItem>
+                      <ListItemText
+                        primary="Twitter"
+                        secondary={profile.socialLinks.twitter}
+                      />
+                    </ListItem>
+                  )}
+                </List>
+              </Paper>
+            </Box>
+          </Grid>
+        </Grid>
+      </Container>
+
+      {/* Avatar Upload Dialog */}
+      <Dialog
+        open={openAvatarDialog}
+        onClose={() => setOpenAvatarDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Change Profile Picture</DialogTitle>
+        <DialogContent>
+          <Box sx={{ p: 2, textAlign: 'center' }}>
+            <input
+              accept="image/*"
+              type="file"
+              id="avatar-upload"
+              onChange={handleAvatarUpload}
+              style={{ display: 'none' }}
             />
-            {editMode && (
-              <button className="avatar-upload-btn">
-                Change Photo
-                <input type="file" accept="image/*" style={{ display: 'none' }} />
-              </button>
-            )}
-          </div>
-          
-          {!editMode && profile?.joinedDate && (
-            <div className="member-since">
-              Member since {new Date(profile.joinedDate).toLocaleDateString()}
-            </div>
-          )}
-        </div>
+            <label htmlFor="avatar-upload">
+              <Button
+                variant="contained"
+                component="span"
+                startIcon={<PhotoCameraIcon />}
+              >
+                Upload New Photo
+              </Button>
+            </label>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenAvatarDialog(false)}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
 
-        <div className="profile-details">
-          {editMode ? (
-            <form className="profile-form">
-              <div className="form-group">
-                <label>Full Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  disabled // Typically email shouldn't be editable
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Bio</label>
-                <textarea
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleInputChange}
-                  placeholder="Tell us about yourself"
-                  rows="3"
-                />
-              </div>
-              
-              <div className="form-group">
-                <label>Location</label>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  placeholder="Where are you based?"
-                />
-              </div>
-              
-              <div className="form-actions">
-                <button 
-                  type="button" 
-                  className="save-btn"
-                  onClick={handleSave}
-                  disabled={loading}
-                >
-                  {loading ? 'Saving...' : 'Save Changes'}
-                </button>
-              </div>
-            </form>
-          ) : (
-            <>
-              <div className="profile-info">
-                <h2 className="profile-name">{profile?.name}</h2>
-                <div className="profile-email">{profile?.email}</div>
-                
-                {profile?.bio && (
-                  <div className="profile-bio">
-                    <h4>About</h4>
-                    <p>{profile.bio}</p>
-                  </div>
-                )}
-                
-                {profile?.location && (
-                  <div className="profile-location">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                      <circle cx="12" cy="10" r="3" />
-                    </svg>
-                    {profile.location}
-                  </div>
-                )}
-              </div>
-              
-              <div className="profile-stats">
-                <div className="stat-item">
-                  <div className="stat-value">{profile?.coursesCompleted || 0}</div>
-                  <div className="stat-label">Courses Completed</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">{profile?.hoursLearned || 0}</div>
-                  <div className="stat-label">Hours Learned</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-value">{profile?.currentStreak || 0}</div>
-                  <div className="stat-label">Day Streak</div>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-      
-      {error && <ErrorMessage message={error} />}
-    </div>
+      {/* Profile Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(null)}
+      >
+        <MenuItem onClick={() => {
+          setEditMode(true);
+          setAnchorEl(null);
+        }}>
+          Edit Profile
+        </MenuItem>
+        <MenuItem onClick={() => {
+          setOpenAvatarDialog(true);
+          setAnchorEl(null);
+        }}>
+          Change Photo
+        </MenuItem>
+      </Menu>
+    </Box>
   );
 };
-
-// Sub-components
-const FullPageLoading = () => (
-  <div className="full-page-center">
-    <LoadingSpinner size="large" />
-  </div>
-);
-
-const FullPageError = ({ message }) => (
-  <div className="full-page-center">
-    <ErrorMessage message={message} />
-    <button 
-      className="retry-btn"
-      onClick={() => window.location.reload()}
-    >
-      Refresh Page
-    </button>
-  </div>
-);
-
-// CSS Styles
-const styles = `
-  .profile-container {
-    min-height: 100vh;
-    background-color: #f8f9fa;
-    padding: 24px;
-    max-width: 900px;
-    margin: 0 auto;
-  }
-
-  .full-page-center {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: #f8f9fa;
-    padding: 20px;
-  }
-
-  .profile-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-  }
-
-  .profile-title {
-    font-size: 28px;
-    color: #333;
-    margin: 0;
-  }
-
-  .edit-btn {
-    padding: 8px 16px;
-    background-color: #646cff;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.3s;
-  }
-
-  .edit-btn:hover {
-    background-color: #535bf2;
-  }
-
-  .edit-btn.cancel {
-    background-color: #ff4444;
-  }
-
-  .edit-btn.cancel:hover {
-    background-color: #cc0000;
-  }
-
-  .edit-btn:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
-
-  .profile-card {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  @media (min-width: 768px) {
-    .profile-card {
-      flex-direction: row;
-    }
-  }
-
-  .profile-avatar-section {
-    padding: 32px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: #f5f7ff;
-    min-width: 250px;
-  }
-
-  .avatar-wrapper {
-    position: relative;
-    margin-bottom: 16px;
-    text-align: center;
-  }
-
-  .profile-avatar {
-    width: 150px;
-    height: 150px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid white;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-
-  .avatar-upload-btn {
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    padding: 4px 8px;
-    background-color: rgba(0,0,0,0.7);
-    color: white;
-    border: none;
-    border-radius: 4px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .avatar-upload-btn:hover {
-    background-color: rgba(0,0,0,0.9);
-  }
-
-  .member-since {
-    font-size: 13px;
-    color: #666;
-    margin-top: 8px;
-  }
-
-  .profile-details {
-    padding: 32px;
-    flex: 1;
-  }
-
-  .profile-info {
-    margin-bottom: 24px;
-  }
-
-  .profile-name {
-    margin: 0 0 8px 0;
-    color: #333;
-    font-size: 24px;
-  }
-
-  .profile-email {
-    color: #666;
-    margin-bottom: 16px;
-  }
-
-  .profile-bio h4 {
-    margin: 16px 0 8px 0;
-    color: #444;
-    font-size: 16px;
-  }
-
-  .profile-bio p {
-    margin: 0;
-    color: #555;
-    line-height: 1.5;
-  }
-
-  .profile-location {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 16px;
-    color: #666;
-    font-size: 14px;
-  }
-
-  .profile-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 16px;
-    margin-top: 32px;
-    padding-top: 24px;
-    border-top: 1px solid #eee;
-  }
-
-  .stat-item {
-    text-align: center;
-  }
-
-  .stat-value {
-    font-size: 24px;
-    font-weight: 600;
-    color: #646cff;
-    margin-bottom: 4px;
-  }
-
-  .stat-label {
-    font-size: 13px;
-    color: #666;
-  }
-
-  .profile-form {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .form-group label {
-    font-size: 14px;
-    color: #555;
-    font-weight: 500;
-  }
-
-  .form-group input,
-  .form-group textarea {
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    font-size: 15px;
-    transition: all 0.3s;
-  }
-
-  .form-group input:focus,
-  .form-group textarea:focus {
-    outline: none;
-    border-color: #646cff;
-    box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
-  }
-
-  .form-group textarea {
-    resize: vertical;
-    min-height: 80px;
-  }
-
-  .form-actions {
-    margin-top: 16px;
-  }
-
-  .save-btn {
-    padding: 10px 20px;
-    background-color: #4caf50;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
-  }
-
-  .save-btn:hover {
-    background-color: #3d8b40;
-  }
-
-  .save-btn:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-  }
-
-  .retry-btn {
-    margin-top: 16px;
-    padding: 10px 20px;
-    background-color: #646cff;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
-  }
-
-  .retry-btn:hover {
-    background-color: #535bf2;
-  }
-
-  @media (max-width: 768px) {
-    .profile-container {
-      padding: 16px;
-    }
-    
-    .profile-title {
-      font-size: 24px;
-    }
-    
-    .profile-avatar-section {
-      padding: 24px;
-    }
-    
-    .profile-avatar {
-      width: 120px;
-      height: 120px;
-    }
-    
-    .profile-details {
-      padding: 24px;
-    }
-  }
-`;
-
-// Inject styles
-const styleSheet = document.createElement("style");
-styleSheet.innerText = styles;
-document.head.appendChild(styleSheet);
 
 export default Profile;
