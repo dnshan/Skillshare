@@ -35,6 +35,7 @@ skill-sharing-platform/
         └── styles/         # CSS/SCSS files
 ```
 
+
 ## Features
 
 - User Authentication and Authorization
